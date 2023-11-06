@@ -1,7 +1,17 @@
+import config
 from package_calc import calc
 from package_show.module_showInfo import show_info
-from package_show.module_showRules import show_rules
-import config
+
+# from package_show.module_showRules import show_rules 
+    # yes
+
+# from package_show import module_showRules 
+# show_rules = module_showRules.show_rules
+    # yes
+
+import package_show
+show_rules = package_show.module_showRules.show_rules
+    # no
 
 def multi_lines_input():
     cfg = config.cfg()

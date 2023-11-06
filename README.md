@@ -37,13 +37,13 @@ from package.subpackage.module import func [as name]
 # import package.module.func [as name] # 多级的.中，最末的会被认为是模块
 ```
 
-简单来说就是from包或模块，从中import包、模块或者功能（类、函数、变量）。
+简单来说就是from包或模块，从中import包、模块或者功能（类、函数、变量）。但后面的测试中会发现，from的对象也可以是一个目录（欠缺\_\_init\_\_.py的包）。
 
 在执行import语句时，到底进行了什么操作？按照python的文档，它执行了如下操作：
 
 > 第1步，创建一个新的，空的module对象（它可能包含多个module）；
 > 第2步，把这个module对象插入sys.module中
-> 第3步，装载module的代码（如果需要，首先必须编译成.pyc文件）
+> 第3步，装载module的代码（每个模块都会被编译成一个对应的.pyc文件）
 > 第4步，执行新的module中对应的代码。
 
 关键就在于第3步要找到module程序所在的位置，其原理为：如果需要导入的module的名字是m1，则解释器必须找到m1.py。解释器先在**当前目录**中搜索名为 m1.py 的文件。如果没有找到的话，接着会到 **sys.path** 变量中给出的目录列表中查找。 sys.path 变量的初始值来自如下：
@@ -91,7 +91,40 @@ from .b import func
   - module_showInfo.py：用于显示计算器的信息。
   - module_showRules.py：用于显示计算器的输入规则。
 - package_calc：用于计算的包。
-  - \_\_init\_\_.py：含有add和mult两个函数，用于计算两个数的和与积。
+  - \_\_init\_\_.py：含有功能函数calc，用于根据表达式计算结果。
   - module_str.py：含有str2int函数，用于将字符转换成整数。
   - subpackage_exp：用于处理表达式字符串的包。
     - module_expAnalysis.py：分析表达式字符串是否合法。
+
+这一结构将涵盖所有可能的引用情况。下来让我们逐一分析。
+
+## 各种引用情况
+
+### 1、引用同目录下的包与模块
+
+在main.py中，分别使用了同目录（simple_calculator）下的模块、包（实际上是对应的\_\_init.py\_\_）以及目录中的两个模块。以如下方式引用，可以正常执行。
+
+```python
+import config
+from package_calc import calc
+from package_show.module_showInfo import show_info
+from package_show.module_showRules import show_rules
+```
+
+进一步分类讨论各个情况
+
+- 使用同目录下的模块中的方法
+
+  直接import模块，或者从模块中import具体的功能（类、函数、变量）。
+
+- 使用同目录下的包中的方法
+
+  直接import包，或者从包中import具体的功能（类、函数、变量）。
+
+- 使用同目录下的目录中的模块中的函数
+
+  注意，这时并不需要要求是“包中的函数”，只需要是“模块中函数”就行，这个要求实际上比包更低。不需要\_\_init.py\_\_也行。
+
+  - 直接from 目录.模块 import 功能，可行
+  - from 目录 import 模块，再调用模块.功能，可行
+  - import 目录，再调用目录.模块.功能，不可行。此时会把“目录.模块.功能”解读成目录的\__init__.py中的内容，所以报错AttributeError: module 目录 has no attribute 模块。
