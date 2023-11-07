@@ -1,5 +1,5 @@
 from .subpackage_exp.module_expAnalysis import legal_exp,parse_expression
-from .module_calc import add,str2int,mult
+from .module_calc import add,mult,str2int
 
 def calc(exp):
     if not legal_exp(exp): return False
