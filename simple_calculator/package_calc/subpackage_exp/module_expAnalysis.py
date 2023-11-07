@@ -21,3 +21,10 @@ def parse_expression(expression):
     num2 = expression[operator_pos + 1:]
 
     return num1, operator, num2
+
+def test_condition5():
+    from ..module_calc import add
+    print(add(1,2))
+
+if __name__ == '__main__':
+    pass

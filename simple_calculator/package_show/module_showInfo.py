@@ -23,6 +23,10 @@ def test_condition3():
     from package_calc.module_calc import add
     print(add(1,2))
 
+def test_condition5():
+    from ..config import cfg
+    cfg().show_info()
+
 if __name__ == '__main__':
     print('This is module_showInfo.py')
     # test_condition2()

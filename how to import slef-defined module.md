@@ -71,7 +71,7 @@ from .b import func
 
 此时的`.`表示后面的内容处于当前目录下，如果换成`..`就是上一级目录下，以此类推。
 
-值得注意的是，①用`.`表示目录的用法只能出现在from的对象里，`import .a`则不行；②当某个`.py`文件使用相对导入时，Python需要知道这个文件所在的包的层级关系，也即这个文件必须存在于一个包中，而且Python知道这个包，因此，运行的脚本无法使用相对引用（即便这个脚本确实处于包中也不行，因为Python不会去判别脚本所在的目录是否为包），只有包中的模块才可以，后面的例子会有助于理解这一点。
+值得注意的是，①用`.`表示目录的用法只能出现在from的对象里，`import .a`则不行；②当某个`.py`文件使用相对导入时，对于目录关系的判断是基于当前模块的`__name__`属性的（而不是实际的目录结构），而运行脚本的`__name__`为`__main__`，必然无法用相对路径导入。更详细的信息请看[`__name__`属性](https://docs.python.org/3/library/__main__.html)。
 
 ## 案例
 
@@ -165,11 +165,13 @@ from package_show.module_showRules import show_rules
 
 另外，当模块与包处于同一目录中时，使用模块中的方法（`from module import func`）和使用包中的方法（`from package import func`）并无本质区别；使用包中的模块（`from package import module`）和使用包中的方法（`from package import func`）在导入时也遵循相同的逻辑。因此，只要能成功实现`from module import xxx`，与module处于同目录下的package就同样可以通过`from package import xxx`引入。
 
-所以，之后只需要观察如何实现`from module import xxx`，也即如何引入模块即可，无需再讨论如何引入包。
+至于下级目录、下下级目录、……中的包，只要用`from package.subpackage.subsubpackage.... import xxx`就好了，与同级目录一个原理。
+
+综上所述，之后只需要观察如何实现`from module import xxx`，也即如何引入模块即可，无需再讨论如何引入包。
 
 
 
-### 2、脚本中引用上一级目录的模块
+### 2、脚本中引用父目录的模块
 
 上一级目录下的包或模块，指的是包或模块与运行脚本所在的目录处于同一父目录下。
 
@@ -192,7 +194,7 @@ from config import cfg
 
 
 
-### 3、脚本中引用隔壁目录下的包或模块
+### 3、脚本中引用隔壁目录的模块
 
 隔壁目录下的包或模块，指的是包或模块所在的目录，和运行脚本所在的目录处于同一父目录下。
 
@@ -215,6 +217,80 @@ from package_calc.module_calc import add
 
 
 
-### 4、模块中引用同目录的包或模块
+### 4、模块中引用同目录的模块
 
-同目录下的包或模块，指的是包或模块所在的目录，和运行脚本所在的目录处于同一父目录下。
+模块中引用同目录的模块，指的是一个包中有模块a和b，运行脚本要引用a，而a又要引用b。此时a是以模块的身份来引用b的。
+
+在本案例中，mian.py要使用package_calc中的函数calc（本质上是`package_calc\__init__.py`中的函数calc），而calc又用了`package_calc\module_calc.py`中的函数add,mult,str2int，以及`package_calc\subpackage_exp\module_expAnalysis.py`中的函数legal_exp,parse_expression，换言之`__init__.py`在以模块身份引用`module_calc.py`. 在`__init__.py`中应该用下面的引用方式：
+
+（以下代码是写在`__init__.py`中的，运行的则是`main.py`）
+
+```python
+# method 1
+from .subpackage_exp.module_expAnalysis import legal_exp,parse_expression
+from .module_calc import add,mult,str2int
+
+# method 2 
+from . import module_calc
+add,mult,str2int = module_calc.add,module_calc.mult,module_calc.str2int
+```
+
+其中`.xxx`就表示同一个包下的模块xxx，可以看作该模块所处的包以空名字`(null)`或者`.`存在。
+
+而且，此时只能以相对路径引用，如果试图使用绝对路径就会出错：
+
+```python
+# from module_calc import add,mult,str2int
+# ModuleNotFoundError: No module named 'module_calc'
+```
+
+
+
+### 5、模块中引用父目录的模块 & 6、模块中引用隔壁目录或的模块
+
+相信根据之前的描述，这一节标题所描述的两种情况是容易理解的。然而，我认为，在实际使用中，应该不会出现这样繁琐而且反人类的引用关系。
+
+所以，这里直接给出如何实现，而不再多加分析。我相信经过之前的例子，这是容易理解的。
+
+
+
+**模块中引用父目录的模块**
+
+运行`main.py`，引用`package_calc\subpackage_exp\module_expAnalysis.py`，在其中又引用`package_calc\module_calc.py`
+
+```python
+# module_expAnalysis.py
+def test_condition5():
+    from ..module_calc import add
+    print(add(1,2))
+# main.py
+def test_condition5():
+    from package_calc.subpackage_exp import module_expAnalysis
+    module_expAnalysis.test_condition5()
+```
+
+这时可以成功运行。
+
+
+
+**模块中引用隔壁目录的模块**
+
+运行`main.py`，引用`package_calc\module_calc.py`，在其中又引用`package_show\module_showInfo.py`
+
+```python
+# module_calc.py
+def test_condition6():
+    from ..package_show.module_showInfo import show_info
+    show_info()
+# main.py
+def test_condition6():
+    from package_calc import module_calc
+    module_calc.test_condition6()
+# ImportError: attempted relative import beyond top-level package
+```
+
+这时会报错ImportError: attempted relative import beyond top-level package。这个错误表示从顶级包之外进行相对导入时。在Python中，相对导入是基于当前模块的`__name__`属性的，而不是它在包中的实际位置。
+
+在本案例中如果输出`module_calc.py`的`__name__`，会发现是`package_calc.module_calc`，这是运行脚本读取module_calc的结构。module_calc中的`.`即表示package_calc这一级，`..`应该是package_calc所属于的包，但并不存在这样的包。
+
+如果要成功实现模块中引用隔壁目录的模块，应该在package_calc中创建`subpackage_xxx/module_xxx`，然后通过`subpackage_exp/modul_expAnalysisy`，以`from ..subpackage_xxx import module_XXX`来引用module_xxx。为了保持本项目的简洁，我就不实现这一情况了，读者可以自行尝试。
