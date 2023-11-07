@@ -5,13 +5,19 @@ from package_show.module_showInfo import show_info
 # from package_show.module_showRules import show_rules 
     # yes
 
-# from package_show import module_showRules 
-# show_rules = module_showRules.show_rules
+from package_show import module_showRules 
+show_rules = module_showRules.show_rules
     # yes
 
-import package_show
-show_rules = package_show.module_showRules.show_rules
+# import package_show
+# show_rules = package_show.module_showRules.show_rules
     # no
+
+def test():
+    from package_calc import calc
+    print(calc)
+    import package_calc.calc
+    print(package_calc.calc)
 
 def multi_lines_input():
     cfg = config.cfg()
@@ -28,4 +34,5 @@ def multi_lines_input():
             else: print("The expression is illegal.")
 
 if __name__ == "__main__":
-    multi_lines_input()
+    # multi_lines_input()
+    test()

@@ -5,6 +5,6 @@ class cfg:
         self.author = "Zhang San"
     def show_info(self):
         print("This is class cfg")
-        print("The calculator' name is " + self.name\
+        print("The calculator's name is " + self.name\
             + ", version is " + self.version\
             + ", author is " + self.author)
