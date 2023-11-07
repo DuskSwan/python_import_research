@@ -52,7 +52,7 @@ from package.subpackage.module import func [as name]
 
 关键就在于第3步要找到module程序所在的位置，其原理为：如果需要导入的module的名字是m1，则解释器必须找到m1.py。解释器先在**当前目录**中搜索名为 m1.py 的文件。如果没有找到的话，接着会到 **sys.path** 变量中给出的目录列表中查找。 sys.path 变量的初始值来自如下：
 
-+ 输入脚本的目录（当前路径）。
++ 输入脚本的目录。
 
 + 环境变量 PYTHONPATH 表示的目录列表中的目录。
 
@@ -80,7 +80,7 @@ from .b import func
 考虑下面这个极其简单的计算器案例，它只能处理正整数的加法和乘法运算：
 
 ```
-└── simple_add_calculater
+└── simple_add_calculater (工作目录)
 	├── config.py
 	├── main.py
     ├── package_show
@@ -107,7 +107,13 @@ from .b import func
 
 这一结构将涵盖所有可能的引用情况。下来让我们逐一分析。
 
+
+
 ## 各种引用情况
+
+注意，工作目录要设为`simple_add_calculater`（而不是本项目的仓库）
+
+
 
 ### 1、脚本中引用同目录的包或模块
 
@@ -126,11 +132,11 @@ from package_show.module_showRules import show_rules
 
 - 使用同目录下的模块中的方法
 
-  直接import模块，或者从模块中import具体的功能（类、函数、变量）。
+  直接import模块，或者从模块中import具体的功能（类、函数、变量）。因为脚本所在的目录已经加入了sys.path.
 
 - 使用同目录下的包中的方法
 
-  直接import包，或者从包中import具体的功能（类、函数、变量）。
+  直接import包，或者从包中import具体的功能（类、函数、变量）。因为脚本所在的目录已经加入了sys.path.
 
 - 使用同目录下的目录中的模块中的函数
 
@@ -153,48 +159,62 @@ from package_show.module_showRules import show_rules
       # no
   ```
 
-我们注意到，在模块与包处于同一目录中时，“使用模块中的方法”和“使用包中的方法”并无本质区别，“使用包中的模块的方法”只需要正确获取“包中的模块”即可，这与“获取包”并无本质区别，进而与“获取模块”并无本质区别。同时，而`from module import xxx`后使用`xxx`与`import module`后使用`module.xxx `有一样的效果。
 
-因此，只要能成功实现`from module import xxx`，就理应可以`from package import xxx`、`from package.module import xxx`、`from package.subpackage.module import xxx`、……
 
-因此，之后只需要观察如何实现`from module import xxx`即可。无需再讨论其他情况。
+我们注意到，`from A import B`后使用`B`与`import A`后使用`A.B `有一样的效果。所以只考虑`from A import B`形式的调用。
 
-### 2、脚本中引用上一级目录的包或模块
+另外，当模块与包处于同一目录中时，使用模块中的方法（`from module import func`）和使用包中的方法（`from package import func`）并无本质区别；使用包中的模块（`from package import module`）和使用包中的方法（`from package import func`）在导入时也遵循相同的逻辑。因此，只要能成功实现`from module import xxx`，与module处于同目录下的package就同样可以通过`from package import xxx`引入。
+
+所以，之后只需要观察如何实现`from module import xxx`，也即如何引入模块即可，无需再讨论如何引入包。
+
+
+
+### 2、脚本中引用上一级目录的模块
 
 上一级目录下的包或模块，指的是包或模块与运行脚本所在的目录处于同一父目录下。
 
-在本案例中，如果希望运行package_show/module_showInfo.py并输出config.py的信息，就属于这种情况。
-
-以如下方式引用，可以正常执行：
+在本案例中，如果希望运行package_show/module_showInfo.py并输出config.py的信息，就属于这种情况。以如下方式引用，可以正常执行：
 
 ```python
+# method 1
 current_path = os.path.abspath(__file__)
 current_cont = os.path.dirname(current_path)
 parent_cont = os.path.dirname(current_cont)
 sys.path.append(parent_cont)
-
 from config import cfg
-```
 
-这本质上是手动添加了模块所在的目录进入sys.path。
-
-如下的方式则都不行：
-
-```python
-# 1
+# method 2
 sys.path.append('.')
 from config import cfg
-# 2
-sys.path.append('..')
-from config import cfg
 ```
 
+这本质上是手动添加了模块所在的目录进入sys.path。只不过法1添加的是绝对路径，法2添加的是相对路径。
 
 
 
-
-### 3、引用隔壁目录下的包或模块
+### 3、脚本中引用隔壁目录下的包或模块
 
 隔壁目录下的包或模块，指的是包或模块所在的目录，和运行脚本所在的目录处于同一父目录下。
 
-在本案例中，如果希望在package_calc/module_calc.py中引用package_show/
+在本案例中，如果希望在package_show/module_showInfo.py中使用package_calc/module_calc.py的函数add，就属于这种情况。以如下方式引用，可以正常执行：
+
+```python
+# method 1
+current_path = os.path.abspath(__file__)
+current_cont = os.path.dirname(current_path)
+parent_cont = os.path.dirname(current_cont)
+sys.path.append(parent_cont)
+from package_calc.module_calc import add
+
+# method 2
+sys.path.append('.')
+from package_calc.module_calc import add
+```
+
+事实上这与“引用上一级目录的包或模块”一样，都是将模块所在的目录加入sys.path。
+
+
+
+### 4、模块中引用同目录的包或模块
+
+同目录下的包或模块，指的是包或模块所在的目录，和运行脚本所在的目录处于同一父目录下。
