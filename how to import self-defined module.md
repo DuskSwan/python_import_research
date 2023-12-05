@@ -81,18 +81,18 @@ from .b import func
 
 考虑下面这个极其简单的计算器案例，它只能处理正整数的加法和乘法运算：
 
-```
+```text
 └── simple_add_calculater (工作目录)
-	├── config.py
-	├── main.py
+ ├── config.py
+ ├── main.py
     ├── package_show
     │   ├── module_showInfo.py
     │   └── module_showRules.py
     └── package_calc
-    	├── __init__.py
-    	├── module_calc.py
-    	└── subpackage_exp
-    		└── module_expAnalysis.py
+     ├── __init__.py
+     ├── module_calc.py
+     └── subpackage_exp
+      └── module_expAnalysis.py
 ```
 
 每个部分的实际意义如下：
@@ -128,21 +128,21 @@ from package_show.module_showRules import show_rules
 
 进一步分类讨论各个情况
 
-- 使用同目录下的模块中的方法
++ 使用同目录下的模块中的方法
 
   直接import模块，或者从模块中import具体的功能（类、函数、变量）。因为脚本所在的目录已经加入了sys.path.
 
-- 使用同目录下的包中的方法
++ 使用同目录下的包中的方法
 
   直接import包，或者从包中import具体的功能（类、函数、变量）。因为脚本所在的目录已经加入了sys.path.
 
-- 使用同目录下的目录中的模块中的函数
++ 使用同目录下的目录中的模块中的函数
 
   注意，这时并不需要要求是“包中的函数”，只需要是“模块中函数”就行，这个要求实际上比包更低。不需要\_\_init.py\_\_也行。
 
-  - 直接from 目录.模块 import 功能，可行
-  - from 目录 import 模块，再调用模块.功能，可行
-  - import 目录，再调用目录.模块.功能，不可行。此时会把“目录.模块.功能”解读成目录的\__init__.py中的内容，所以报错AttributeError: module 目录 has no attribute 模块。
+  + 直接from 目录.模块 import 功能，可行
+  + from 目录 import 模块，再调用模块.功能，可行
+  + import 目录，再调用目录.模块.功能，不可行。此时会把“目录.模块.功能”解读成目录的\__init__.py中的内容，所以报错AttributeError: module 目录 has no attribute 模块。
 
   ```python
   from package_show.module_showRules import show_rules 
@@ -165,8 +165,6 @@ from package_show.module_showRules import show_rules
 
 综上所述，之后只需要观察如何实现`from module import xxx`，也即如何引入模块即可，无需再讨论如何引入包。
 
-
-
 ### 2、脚本中引用父目录的模块
 
 上一级目录下的包或模块，指的是包或模块与运行脚本所在的目录处于同一父目录下。
@@ -188,8 +186,6 @@ from config import cfg
 
 这本质上是手动添加了模块所在的目录进入sys.path。只不过法1添加的是绝对路径，法2添加的是相对路径。
 
-
-
 ### 3、脚本中引用隔壁目录的模块
 
 隔壁目录下的包或模块，指的是包或模块所在的目录，和运行脚本所在的目录处于同一父目录下。
@@ -210,8 +206,6 @@ from package_calc.module_calc import add
 ```
 
 事实上这与“引用上一级目录的包或模块”一样，都是将模块所在的目录加入sys.path。
-
-
 
 ### 4、模块中引用同目录的模块
 
@@ -240,17 +234,13 @@ add,mult,str2int = module_calc.add,module_calc.mult,module_calc.str2int
 # ModuleNotFoundError: No module named 'module_calc'
 ```
 
-
-
 ### 5、模块中引用父目录的模块 & 6、模块中引用隔壁目录或的模块
 
 相信根据之前的描述，这一节标题所描述的两种情况是容易理解的。然而，我认为，在实际使用中，应该不会出现这样繁琐而且反人类的引用关系。
 
 所以，这里直接给出如何实现，而不再多加分析。我相信经过之前的例子，这是容易理解的。
 
-
-
-**模块中引用父目录的模块**
+#### 模块中引用父目录的模块
 
 运行`main.py`，引用`package_calc\subpackage_exp\module_expAnalysis.py`，在其中又引用`package_calc\module_calc.py`
 
@@ -267,9 +257,7 @@ def test_condition5():
 
 这时可以成功运行。
 
-
-
-**模块中引用隔壁目录的模块**
+#### 模块中引用隔壁目录的模块
 
 运行`main.py`，引用`package_calc\module_calc.py`，在其中又引用`package_show\module_showInfo.py`
 
