@@ -6,6 +6,8 @@ python中，每个.py文件被称之为模块(module)，每个具有`__init__.py
 
 不过，实际情况要复杂得多，因为我们有相对引用和绝对引用两种引用方式；同时，还有从脚本调用模块、从模块调用模块等多种层级关系，所以需要分类讨论，测试如何在各种情况下合理引用。
 
+仓库中，simple_calculator是用于探究各种绝对与相对引用情况的案例；conditions_test则测试其他相关机制，之后如果有关于python机制的疑惑，也会用在conditions_test里面实践。
+
 ## 基本概念
 
 ### 包(package)与模块(module)
@@ -39,6 +41,8 @@ from package.subpackage.module import func [as name]
 
 值得注意的是：①后面的测试中会发现，from的对象也可以是一个目录（欠缺`__init__.py`的包）②from A import B会先被考虑成从模块引入功能，不满足时再考虑从包引入模块，如果一个包A中有同名的模块B与功能B，from A import B导入的实际上是功能B而非模块。
 
+> 2023/12/5 补充一个之前我没注意过的小知识点：当从某个脚本中引入变量时，该变量在那个脚本中可能被修改了多次，实际引入的是“最终”情况下的变量。比如a.py中先后定义了两个同名的函数，引入的就是后一个。
+
 ### 环境变量sys.path
 
 在执行import语句时，到底进行了什么操作？按照python的文档，它执行了如下操作：
@@ -54,7 +58,7 @@ from package.subpackage.module import func [as name]
 
 + 环境变量 PYTHONPATH 表示的目录列表中的目录。
 
-+ Python 默认安装路径中搜索。 
++ Python 默认安装路径中搜索。
 
 sys.path变量中依次包含上述路径，因此搜索顺序也是当前路径、然后是PYTHONPATH、然后是python的安装设置相关的默认路径。正因为存在这样的顺序，如果当前路径或PYTHONPATH中存在与标准module同样的module，则会覆盖标准module。比如，如果当前目录下存在xml.py，那么执行import xml时，导入的是当前目录下的module，而不是系统标准的xml。
 
@@ -93,25 +97,21 @@ from .b import func
 
 每个部分的实际意义如下：
 
-- main.py：主函数，运行后，在控制台输入表达式，输出值，直到输入exit.
-- package_show：用于显示信息的“包”，但不含\_\_init\_\_.py，可以与含有\_\_init\_\_.py的模块形成比较。
-  - module_showInfo.py：用于显示计算器的信息。
-  - module_showRules.py：用于显示计算器的输入规则。
-- package_calc：用于计算的包。
-  - \_\_init\_\_.py：含有功能函数calc，用于根据表达式计算结果。
-  - module_str.py：含有str2int函数，用于将字符转换成整数。
-  - subpackage_exp：用于处理表达式字符串的包。
-    - module_expAnalysis.py：分析表达式字符串是否合法。
++ main.py：主函数，运行后，在控制台输入表达式，输出值，直到输入exit.
++ package_show：用于显示信息的“包”，但不含\_\_init\_\_.py，可以与含有\_\_init\_\_.py的模块形成比较。
+  + module_showInfo.py：用于显示计算器的信息。
+  + module_showRules.py：用于显示计算器的输入规则。
++ package_calc：用于计算的包。
+  + \_\_init\_\_.py：含有功能函数calc，用于根据表达式计算结果。
+  + module_str.py：含有str2int函数，用于将字符转换成整数。
+  + subpackage_exp：用于处理表达式字符串的包。
+    + module_expAnalysis.py：分析表达式字符串是否合法。
 
 这一结构将涵盖所有可能的引用情况。下来让我们逐一分析。
-
-
 
 ## 各种引用情况
 
 注意，工作目录要设为`simple_add_calculater`（而不是本项目的仓库）
-
-
 
 ### 1、脚本中引用同目录的包或模块
 
@@ -157,9 +157,7 @@ from package_show.module_showRules import show_rules
       # no
   ```
 
-
-
-我们注意到，`from A import B`后使用`B`与`import A`后使用`A.B `有一样的效果。所以只考虑`from A import B`形式的调用。
+我们注意到，`from A import B`后使用`B`与`import A`后使用`A.B`有一样的效果。所以只考虑`from A import B`形式的调用。
 
 另外，当模块与包处于同一目录中时，使用模块中的方法（`from module import func`）和使用包中的方法（`from package import func`）并无本质区别；使用包中的模块（`from package import module`）和使用包中的方法（`from package import func`）在导入时也遵循相同的逻辑。因此，只要能成功实现`from module import xxx`，与module处于同目录下的package就同样可以通过`from package import xxx`引入。
 
