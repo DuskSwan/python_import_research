@@ -8,17 +8,18 @@ python中，每个.py文件被称之为模块(module)，每个具有\_\_init\_\_
 
 我将给出一个极其简单的计算器案例，在这一案例中涵盖所有可能的引用情况。
 
-```
-└── simple_calculator
-	├── main.py
+```text
+└── simple_add_calculater (工作目录)
+ ├── config.py
+ ├── main.py
     ├── package_show
     │   ├── module_showInfo.py
     │   └── module_showRules.py
     └── package_calc
-    	├── __init__.py
-    	├── module_calc.py
-    	└── subpackage_exp
-    		└── module_expAnalysis.py
+     ├── __init__.py
+     ├── module_calc.py
+     └── subpackage_exp
+      └── module_expAnalysis.py
 ```
 
 更加详细的结果，请阅读`how to import self-defined module.md`。
