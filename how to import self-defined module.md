@@ -47,9 +47,12 @@ from package.subpackage.module import func [as name]
 
 在执行import语句时，到底进行了什么操作？按照python的文档，它执行了如下操作：
 
-> 第1步，创建一个新的，空的module对象（它可能包含多个module）；
+> 第1步，创建一个新的，空的module对象（它可能包含多个module）
+> 
 > 第2步，把这个module对象插入sys.module中
+> 
 > 第3步，装载module的代码（每个模块都会被编译成一个对应的.pyc文件）
+> 
 > 第4步，执行新的module中对应的代码。
 
 关键就在于第3步要找到module程序所在的位置，其原理为：如果需要导入的module的名字是m1，则解释器必须找到m1.py。解释器先在**当前目录**中搜索名为 m1.py 的文件。如果没有找到的话，接着会到 **sys.path** 变量中给出的目录列表中查找。 sys.path 变量的初始值来自如下：
